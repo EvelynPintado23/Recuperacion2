@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -29,109 +30,133 @@ import ec.edu.ups.modelo.Tarjeta;
 @WebServlet("/IngresarPedido")
 public class IngresarPedido extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-	
-    public IngresarPedido() {
-        super();
-        // TODO Auto-generated constructor stub
-        
-    }
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#HttpServlet()
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+	private Pedido pedido;
+	private double total_pedido;
+	private boolean bandera;
+	List<Comida> comidas;
+	private Tarjeta tarjeta;
+	private Date fecha;
+	private Pedido p;
+	private PedidoDAO pedidoDAO ;
+	private ComidaDAO comidaDAO;
+	private TarjetaDAO tarjetaDAO ;
+	public IngresarPedido() {
+		super();
+		// TODO Auto-generated constructor stub
+		pedidoDAO = DAOFactory.getFactory().getPedidoDAO();
+		comidaDAO = DAOFactory.getFactory().getComidaDAO();
+		tarjetaDAO = DAOFactory.getFactory().getTarjetaDAO();
+		pedido = new Pedido();
+		total_pedido = 0.0;
+		bandera = false;
+		comidas = new ArrayList<Comida>();
+		tarjeta= new Tarjeta();
+		fecha=null;
+		p=new Pedido();
+	}
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		response.getWriter().append("Served at: ").append(request.getContextPath());
-		
 
 	}
-	
-	
+
 	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		//doGet(request, response);
+		// doGet(request, response);
 		String url = null;
-		double total=0;
-		LocalDateTime localDateTime = LocalDateTime.now();
-	    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneOffset.systemDefault());
-	    Instant instant = zonedDateTime.toInstant();
-	    Date fecha = Date.from(instant);
-
 		
+		
+
 		response.setContentType("text/html");
-	    PrintWriter out = response.getWriter();
-	    
-	    
-	    PedidoDAO pedidoDAO = DAOFactory.getFactory().getPedidoDAO();
-		ComidaDAO comidaDAO = DAOFactory.getFactory().getComidaDAO();
-		TarjetaDAO tarjetaDAO = DAOFactory.getFactory().getTarjetaDAO();
-		Tarjeta tarjeta=tarjetaDAO.read(request.getParameter("tarjeta"));
+		PrintWriter out = response.getWriter();
 
-		if(tarjeta==null) {
-			request.setAttribute("Message", "<div class=\"alert alert-danger\" role=\"alert\">La ingresada no esta registrada</div>");
-			url = "/Publica/crear_pedido.jsp";
+		String accion = request.getParameter("accion");
+
 		
-		}else {	
-			total+=Double.parseDouble(request.getParameter("precio1"));
-			Pedido pedido=new Pedido();
-			pedido.setCliente(request.getParameter("cliente").toUpperCase());
-			pedido.setObservaciones(request.getParameter("observaciones").toUpperCase());
-			pedido.setTarjeta(tarjeta);
-			pedido.setTotal(total);
-			pedido.setFecha(fecha);
-			pedido.setNumero(1); 
+		tarjeta = tarjetaDAO.read(request.getParameter("tarjeta"));
+		total_pedido =total_pedido+ Double.parseDouble(request.getParameter("precio"));
 
-			pedidoDAO.create(pedido);	 
-			
-			Comida comida= new Comida();
-			comida.setCodigo(1);
-			comida.setNombre(request.getParameter("nombre1").toUpperCase());
-			comida.setPedido(pedido);
-			comida.setPrecio_unitario(Double.parseDouble(request.getParameter("precio1")));
-			comidaDAO.create(comida);
-			
-			
-			if(request.getParameter("nombre2").trim().length()!=0 ) {
-				total+=Double.parseDouble(request.getParameter("precio2"));
-				pedido.setTotal(total);
-				pedidoDAO.update(pedido);
-				ComidaDAO comidaDAO1 = DAOFactory.getFactory().getComidaDAO();
-				Comida comida1= new Comida();
-				comida1.setCodigo(1);
-				comida1.setNombre(request.getParameter("nombre2").toUpperCase());
-				comida1.setPedido(pedido);
-				comida1.setPrecio_unitario(Double.parseDouble(request.getParameter("precio2")));
-				comidaDAO1.create(comida1);	
-				
-				
-			}
-			if(request.getParameter("nombre3").trim().length()!=0) {
-				total+= Double.parseDouble(request.getParameter("precio3"));
-				pedido.setTotal(total);
-				pedidoDAO.update(pedido);
-				ComidaDAO comidaDAO2 = DAOFactory.getFactory().getComidaDAO();
-				Comida comida2= new Comida();
-				comida2.setCodigo(1);
-				comida2.setNombre(request.getParameter("nombre3").toUpperCase());
-				comida2.setPedido(pedido);
-				comida2.setPrecio_unitario(Double.parseDouble(request.getParameter("precio3")));
-				comidaDAO2.create(comida2);	
-				
-			}
-			
-	        request.setAttribute("Message", "<div class=\"alert alert-success\" role=\"alert\">\r\n" + 
-	        		"  Pedido Realizado" + 
-	        		"</div>");
-			url = "/Publica/crear_pedido.jsp";
-		}
+		if (accion.equals("Agregar")) {
+
+			if (tarjeta == null) {
+				request.setAttribute("Message",
+						"<div class=\"alert alert-danger\" role=\"alert\">La ingresada no esta registrada</div>");
+				url = "/Publica/crear_pedido.jsp";
+
+			} else {
+
+				if (bandera) {
 					
+					Comida comida = new Comida();
+					comida.setNombre(request.getParameter("nombre_comida"));
+					comida.setPrecio_unitario(Double.parseDouble(request.getParameter("precio")));
+					p=pedidoDAO.buscar("cliente", request.getParameter("cliente").toUpperCase());
+					p.setTotal(total_pedido);
+					pedidoDAO.update(p);
+					comida.setPedido(p);
+					comidaDAO.create(comida);
+					comidas.add(comida);
+				} else {
+					LocalDateTime localDateTime = LocalDateTime.now();
+					ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneOffset.systemDefault());
+					Instant instant = zonedDateTime.toInstant();
+					fecha = Date.from(instant);
+
+					pedido.setCliente(request.getParameter("cliente").toUpperCase());
+					pedido.setObservaciones(request.getParameter("observaciones").toUpperCase());
+					pedido.setTarjeta(tarjeta);
+					pedido.setFecha(fecha);
+					bandera=true;
+					pedidoDAO.create(pedido);
+
+				}
+
+
+			}
+			request.setAttribute("total", total_pedido);
+			request.setAttribute("pedido", pedido);
+			url = "/Paginas/RegistrarPedido.jsp";
+		}
+		
+		if(accion.equals("Realizar Pedido")) {
+			List<Pedido> ped = new ArrayList<Pedido>();
+		    Pedido pedi = new Pedido();
+			pedi=pedidoDAO.buscar("cliente", request.getParameter("cliente").toUpperCase());
+			ped.add(pedi);
+			tarjeta.setPedido(ped);
+			tarjetaDAO.update(tarjeta);
+			pedi.setComida(comidas);
+			System.out.println("TOTAL.."+total_pedido);
+			pedi.setTotal(total_pedido);
+			pedidoDAO.update(pedido);
+			
+			pedido= new Pedido();
+			total_pedido=0.0;
+			request.setAttribute("total", total_pedido);
+			request.setAttribute("pedido", pedido);
+			request.setAttribute("Message",
+					"<div class=\"alert alert-success\" role=\"alert\">\r\n" + "  Pedido Realizado" + "</div>");
+			url = "/Paginas/RegistrarPedido.jsp";
+			
+		}
+
+
 		getServletContext().getRequestDispatcher(url).forward(request, response);
 	}
 
