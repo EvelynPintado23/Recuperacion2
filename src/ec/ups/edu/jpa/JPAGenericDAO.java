@@ -213,7 +213,8 @@ public class JPAGenericDAO<T, ID> implements GenericDAO<T, ID> {
 				criteriaQuery.where(predicate);
 
 				Query query = em.createQuery(criteriaQuery);
-				return (T) query.getSingleResult();
+				return (T) query.getResultList();
+				//return (T) query.getSingleResult();
 	}
 
 	@Override

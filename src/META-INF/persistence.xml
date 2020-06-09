@@ -6,7 +6,7 @@
 		<class>ec.edu.ups.modelo.Tarjeta</class>
 		<class>ec.edu.ups.modelo.Comida</class>
 		<properties>
-			<!-- <property name="eclipselink.ddl-generation" value="drop-and-create-tables" /> 	 --> 
+			<!-- <property name="eclipselink.ddl-generation" value="drop-and-create-tables" /> 	  -->
 			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/restaurante1" />
 			<property name="javax.persistence.jdbc.user" value="root" />
 			<property name="javax.persistence.jdbc.password" value="cuenca" />
